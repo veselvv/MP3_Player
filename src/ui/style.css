@@ -1,0 +1,9 @@
+scale.horizontal trough {
+    min-height: 5px;
+}
+scale.horizontal slider {
+    min-height: 5px;
+    min-width: 5px;
+}
+
+
