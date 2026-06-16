@@ -1,13 +1,13 @@
 CC = gcc
-CFLAGS = -I. -I./libs -g
-SDL_CFLAGS = $(shell pkg-config --cflags sdl2 SDL2_mixer)
-SDL_LIBS = $(shell pkg-config --libs sdl2 SDL2_mixer)
-LDFLAGS = -lm
-TARGETS  = src/new_file.c src/dirwork.c
-BUILD = build/test_audio
+CFLAGS = -I. -I../src -g
+LIBS = $(shell pkg-config --cflags --libs gtk4 sdl2 SDL2_mixer) -lmpg123
+SRCS = src/app.c src/audio.c src/dirwork.c src/music_duration.c
+TARGET = build/app
 
-all:
-	$(CC) -o $(BUILD) $(TARGETS) $(CFLAGS) $(SDL_CFLAGS) $(SDL_LIBS) $(LDFLAGS)
+all: $(TARGET)
+
+$(TARGET): $(SRCS)
+	$(CC) $(SRCS) -o $@ $(CFLAGS) $(LIBS)
 
 clean:
-	rm -f test_audio
+	rm -f $(TARGET)

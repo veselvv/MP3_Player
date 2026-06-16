@@ -1,0 +1,54 @@
+scale.horizontal trough {
+    min-height: 5px;
+}
+scale.horizontal slider {
+    min-height: 5px;
+    min-width: 5px;
+}
+
+
+/* .main_scrolled_window{
+    border-right:5px solid rgb(35, 34, 34);
+} */
+
+.main_head{
+    border-bottom:3px solid rgb(35, 34, 34) ; 
+}
+
+
+scale.vertical trough {
+    min-width: 10px;  /* или больше, например 30px */
+}
+
+/* Ширина движка (бегунка) */
+scale.vertical slider {
+    min-width: 10px;
+    min-height: 10px;  /* также можно увеличить высоту */
+}
+
+.button_state_on{
+    background: #ff8e1d;
+}
+/* 
+scale.horizontal trough highlight {
+    background-color: #ff8e1d;
+    border: 1px solid #ff8e1d;
+}
+
+
+scale.vertical trough highlight {
+    background-color: #ff8e1d;
+    border: 1px solid #ff8e1d;
+}
+
+
+listbox row:selected {
+    background-color: #ff8e1d;
+}
+
+
+
+
+row:selected {
+    background-color: #ff8e1d;
+} */

@@ -17,7 +17,6 @@ int wrkdir(const char *dirname){
         if(strcmp(entry->d_name, ".")==0 || strcmp(entry->d_name, "..")==0){
             continue;
         }
-
         if(entry->d_name[0]!='.'){
             if(strstr(entry->d_name, ".mp3")!=NULL){
                 printf("%s\n", entry->d_name);

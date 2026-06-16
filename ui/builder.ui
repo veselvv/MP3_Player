@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+    <object class="GtkWindow" id="window">
+        <property name="title">MP3</property>
+        <property name="default-width">400</property>
+        <property name="default-height">600</property>
+        <child>
+            <object class="GtkBox" id="main_page">
+                <property name="orientation">vertical</property>
+                <!-- <property name="spacing">10</property> -->
+                <style>
+                    <class name="main_page"/>
+                </style>
+                <child>
+                    <object class="GtkBox" id="main_header">
+                        <property name="valign">GTK_ALIGN_START</property>
+                        <property name="orientation">horizontal</property>
+                        <property name="hexpand">true</property>
+                        <property name="halign">fill</property>
+                        <property name="height-request">40</property>
+                        <style>
+                            <class name="main_head"/>
+                        </style>
+                        <child>
+                            <object class="GtkBox">
+                                <property name="halign">fill</property>
+                                <property name="hexpand">true</property>
+
+                                <child>
+                                    <object class="GtkButton" id="main_button_one_track">
+                                        <property name="hexpand">true</property>
+                                        <property name="halign">end</property>
+                                        <child>
+                                            <object class="GtkImage">
+                                                <property name="file">../ui/pic/1.png</property>
+                                            </object>
+                                        </child>
+                                        
+                                    </object>
+                                </child>
+                                <child>
+                                    <object class="GtkButton" id="main_button_one_track_loop">
+                                        <property name="hexpand">False</property>
+                                        <property name="halign">end</property>
+                                        <child>
+                                            <object class="GtkImage">
+                                                <property name="file">../ui/pic/loop.png</property>
+                                            </object>
+                                        </child>
+                                        
+                                    </object>
+                                </child>
+                                <child>
+                                    <object class="GtkButton" id="main_button_mode">
+                                        <property name="hexpand">False</property>
+                                        <property name="halign">end</property>
+                                        <child>
+                                            <object class="GtkImage">
+                                                <property name="file">../ui//pic/shuffle.png</property>
+                                            </object>
+                                        </child>
+                                    </object>
+                                </child>
+                            </object>
+                        </child>
+                        <!-- <child>
+                            <object class="GtkBox">
+                                <property name="halign">center</property>
+                                <property name="valign">center</property>
+                                <style>
+                                    <class name="line-head"/>
+                                </style>
+                                <child>
+                                    <object class="GtkImage">
+                                        <property name="file">pic/player.png</property>
+                                        <property name="pixel-size">64</property>
+                                        <property name="margin-top">10</property>
+                                        <property name="margin-start">25</property>
+                                    </object>
+                                </child>
+                            </object>
+                        </child> -->
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkBox">
+                        <property name="orientation">horizontal</property>
+                        <property name="halign">fill</property>
+                        <property name="hexpand">False</property>
+                        <property name="spacing">0</property>
+                        <!-- <property name="wide-handle">true</property> -->
+                        <child>
+                            <object class="GtkBox">
+                                <property name="orientation">vertical</property>
+                                <style>
+                                    <class name="main_scrolled_window"/>
+                                </style>
+                                <child>
+                                    <object class="GtkBox">
+                                        <property name="orientation">horizontal</property>
+                                        <child>
+                                            <object class="GtkButton" id="main_button_update">
+                                                <property name="hexpand">True</property>
+                                                <property name="halign">fill</property>
+                                                <child>
+                                                    <object class="GtkImage">
+                                                        <property name="file">../ui/pic/update.png</property>
+                                                    </object>
+                                                </child>
+                                            </object>
+                                        </child>
+                                        <child>
+                                            <object class="GtkButton" id="main_button_open_folder">
+                                                <property name="hexpand">True</property>
+                                                <property name="halign">fill</property>
+                                                <child>
+                                                    <object class="GtkImage">
+                                                        <property name="file">../ui/pic/folder.png</property>
+                                                    </object>
+                                                </child>
+                                            </object>
+                                        </child>
+                                    </object>
+                                </child>
+
+                                <child>
+                                    <object class="GtkScrolledWindow" id="main_scrolled_window">
+                                        <property name="width-request">400</property>
+                                        <property name="halign">fill</property>
+                                        <property name="hexpand">True</property>
+                                        <property name="valign">fill</property>
+                                        <property name="vexpand">True</property>
+                                        <property name="hscrollbar-policy">never</property>
+                                        <property name="vscrollbar-policy">automatic</property>
+
+                                        <style>
+                                            <class name="main_scrolled_window"/>
+
+                                        </style>
+                                        <child>
+                                            <object class="GtkListBox" id="main_tracks_listbox">
+                                                <property name="selection-mode">single</property>
+                                            </object>
+                                        </child>
+
+                                    </object>
+                                </child>
+                            </object>
+
+                        </child>
+                        <child>
+                            <object class="GtkBox">
+                                <property name="orientation">vertical</property>
+                                <property name="halign">fill</property>
+                                <property name="hexpand">True</property>
+                                <property name="spacing">10</property>
+                                <child>
+                                    <object class="GtkImage">
+                                        <property name="file">../ui/pic/Bulbasaur.png</property>
+                                        <property name="pixel-size">200</property>
+                                    </object>
+                                </child>
+                                <child>
+                                    <object class="GtkBox">
+                                        <property name="halign">center</property>
+                                        <property name="hexpand">False</property>
+                                        <property name="width-request">400</property>
+                                        <property name="height-request">200</property>
+                                        <property name="orientation">vertical</property>
+                                        <property name="valign">center</property>
+                                        <child>
+                                            <object class="GtkLabel" id="main_label_name">
+                                                <property name="label">Unknown</property>
+                                                <style>
+                                                    <class name="main_label_name"></class>
+                                                </style>
+                                            </object>
+                                        </child>
+                                        <child>
+                                            <object class="GtkScale" id="main_scale">
+                                                <property name="orientation">horizontal</property>
+                                                <property name="hexpand">True</property>
+                                                <property name="halign">fill</property>
+                                                <property name="draw-value">False</property>
+                                                <style>
+                                                    <class name="scale"></class>
+                                                </style>
+                                            </object>
+                                        </child>
+                                        <child>
+                                            <object class="GtkLabel" id="main_label_time">
+                                                <property name="label">00:00/00:00</property>
+                                                <property name="halign">end</property>
+                                                <property name="margin-end">15</property>
+                                            </object>
+                                        </child>
+                                        <child>
+                                            <object class="GtkBox">
+                                                <property name="orientation">horizontal</property>
+                                                <property name="halign">center</property>
+                                                <property name="spacing">5</property>
+
+                                                <child>
+                                                    <object class="GtkBox">
+                                                        <child>
+                                                            <object class="GtkButton" id="main_prev_button">
+                                                                <property name="halign">center</property>
+                                                                <property name="valign">center</property>
+                                                                <child>
+                                                                    <object class="GtkImage" id="main_prev_button_icon">
+                                                                        <property name="file">../ui/pic/prev.png</property>
+                                                                        <property name="pixel-size">32</property>
+                                                                    </object>
+                                                                </child>
+                                                                <style>
+                                                                    <class name="last_button"/>
+                                                                </style>
+                                                            </object>
+                                                        </child>
+                                                        <child>
+                                                            <object class="GtkButton" id="main_play_button">
+                                                                <property name="halign">center</property>
+                                                                <property name="valign">center</property>
+                                                                <child>
+                                                                    <object class="GtkImage" id="main_play_button_icon">
+                                                                        <property name="file">../ui/pic/play.png</property>
+                                                                        <property name="pixel-size">32</property>
+                                                                    </object>
+                                                                </child>
+                                                                <style>
+                                                                    <class name="last_button"/>
+                                                                </style>
+                                                            </object>
+                                                        </child>
+                                                        <child>
+                                                            <object class="GtkButton" id="main_next_button">
+                                                                <property name="halign">center</property>
+                                                                <property name="valign">center</property>
+                                                                <child>
+                                                                    <object class="GtkImage" id="main_next_button_icon">
+                                                                        <property name="file">../ui/pic/next.png</property>
+                                                                        <property name="pixel-size">32</property>
+                                                                    </object>
+                                                                </child>
+                                                                <style>
+                                                                    <class name="last_button"/>
+                                                                </style>
+                                                            </object>
+                                                        </child>
+                                                    </object>
+                                                </child>
+
+                                            </object>
+                                        </child>
+
+                                    </object>
+                                </child>
+                            </object>
+                        </child>
+                        <child>
+                            <object class="GtkScale" id="main_volume_scale">
+                                <property name="orientation">vertical</property>
+                                <property name="inverted">True</property>
+                                <property name="hexpand">False</property>
+                                <property name="vexpand">True</property>
+                                <property name="halign">center</property>
+                                <property name="draw-value">False</property>
+                                <property name="adjustment">
+                                    <object class="GtkAdjustment">
+                                        <property name="lower">0</property>
+                                        <property name="upper">100</property>
+                                        <property name="value">50</property>
+                                        <property name="step-increment">1</property>
+                                        <property name="page-increment">10</property>
+                                    </object>
+                                </property>
+                                <style>
+                                    <class name="scale"/>
+                                </style>
+                            </object>
+                        </child>
+                    </object>
+                </child>
+
+            </object>
+        </child>
+    </object>
+</interface>
