@@ -6,8 +6,14 @@ TARGET = build/app
 
 all: $(TARGET)
 
-$(TARGET): $(SRCS)
+# Правило для создания папки build
+build:
+	mkdir -p build
+
+# Сборка зависит от папки (порядокная зависимость)
+$(TARGET): $(SRCS) | build
 	$(CC) $(SRCS) -o $@ $(CFLAGS) $(LIBS)
 
 clean:
 	rm -f $(TARGET)
+	rmdir build 2>/dev/null || true
