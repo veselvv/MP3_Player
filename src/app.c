@@ -2,6 +2,7 @@
 #include <string.h>
 #include <gtk/gtk.h>
 #include <time.h>
+#include<mpg123.h>
 #include "audio.h"
 #include "dirwork.h"
 #include "music_duration.h"
@@ -198,6 +199,27 @@ static void add_track_to_listbox(GtkListBox *listbox, const char *track_name, gp
 }
 
 
+static bool is_valid_mp3(const char *path) {
+    mpg123_handle *mh = mpg123_new(NULL, NULL);
+    if (!mh) return false;
+
+    int err = mpg123_open(mh, path);
+    if (err != MPG123_OK) {
+        mpg123_delete(mh);
+        return false;
+    }
+
+    long rate;
+    int channels, encoding;
+    err = mpg123_getformat(mh, &rate, &channels, &encoding);
+    mpg123_close(mh);
+    mpg123_delete(mh);
+
+    // Проверяем, что формат корректен (MP3 — это MPG123_ENC_SIGNED_16 или другие)
+    return err == MPG123_OK && rate > 0 && channels > 0;
+}
+
+
 static void add_tracks_from_dir(const char *dirname, gpointer userdata){
     AppData* data = (AppData*)userdata;
     DIR *dir = opendir(dirname);
@@ -212,11 +234,20 @@ static void add_tracks_from_dir(const char *dirname, gpointer userdata){
             continue;
         }
         if(entry->d_name[0]!='.'){
-            if(strstr(entry->d_name, ".mp3")!=NULL){
+            char path[1024];
+            snprintf(path,1024,"%s/%s", data->mData->folderpath, entry->d_name);
+            if(is_valid_mp3(path)){
                 data->mData->last_track_index = i>data->mData->last_track_index?i:data->mData->last_track_index;
                 i++;
                 add_track_to_listbox(GTK_LIST_BOX(data->main_tracks_listbox), entry->d_name,data);
             }
+
+
+            // if(strstr(entry->d_name, ".mp3")!=NULL){
+            //     data->mData->last_track_index = i>data->mData->last_track_index?i:data->mData->last_track_index;
+            //     i++;
+            //     add_track_to_listbox(GTK_LIST_BOX(data->main_tracks_listbox), entry->d_name,data);
+            // }
         }
     }
     closedir(dir);
@@ -269,13 +300,12 @@ static void on_folder_selected(GObject *source, GAsyncResult *result, gpointer u
             gtk_list_box_remove_all(GTK_LIST_BOX(data->main_tracks_listbox));
             data->mData->last_track_index = 0;
             // Сканируем выбранную папку
-            add_tracks_from_dir(folder_path, data);
-
             // Меняем заголовок окна (опционально)
             char title[512];
             snprintf(title, sizeof(title), "MP3 Плеер - %s", folder_path);
             gtk_window_set_title(data->main_window, title);
             strncpy(data->mData->folderpath,folder_path,512);
+            add_tracks_from_dir(folder_path, data);
             g_print("%s", data->mData->folderpath);
             g_free(folder_path);
         }
@@ -306,10 +336,12 @@ static void main_next_button_clicked(GtkButton *btn, gpointer userdata) {
     printf("\n%d\n", data->current_button_mod_state);
     switch (data->current_button_mod_state){
     case ON:
-        int rand_index = rand() % data->mData->last_track_index;
+        int total_tracks = data->mData->last_track_index + 1;
+        if (total_tracks <= 0) return; // нет треков
+        int rand_index = rand() % total_tracks;
         GtkListBoxRow *rand_row = gtk_list_box_get_row_at_index(listbox, rand_index);
         if (!rand_row) {
-            // опционально: зациклить на первый
+            // на случай, если список изменился – берём первый
             rand_row = gtk_list_box_get_row_at_index(listbox, 0);
             if (!rand_row) return;
         }
