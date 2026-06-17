@@ -1,67 +1,87 @@
 #!/bin/bash
 
+set -e
+
 echo "🔍 Проверка зависимостей..."
 
-# Проверка gcc
-if ! command -v gcc &> /dev/null; then
-    echo "❌ gcc не найден. Установите build-essential."
-    exit 1
-fi
-echo "✅ gcc найден"
+# Цвета для вывода
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
 
-# Проверка make
-if ! command -v make &> /dev/null; then
-    echo "❌ make не найден. Установите make."
-    exit 1
-fi
-echo "✅ make найден"
-
-# Проверка pkg-config
-if ! command -v pkg-config &> /dev/null; then
-    echo "❌ pkg-config не найден. Установите pkg-config."
-    exit 1
-fi
-echo "✅ pkg-config найден"
-
-# Проверка каждой зависимости
-check_dep() {
-    local dep=$1
+# Функция проверки через компиляцию
+check_lib() {
+    local lib_name=$1
     local pkg_name=$2
-    local header=$3
-    local libfile=$4
+    local cflags=$3
+    local libs=$4
+    local test_code=$5
 
-    if pkg-config --exists "$pkg_name" 2>/dev/null; then
-        echo "✅ $dep найден (pkg-config)"
+    echo -n "   Проверка $lib_name... "
+    if echo "$test_code" | gcc -x c - -o /dev/null $(pkg-config --cflags --libs $pkg_name) 2>/dev/null; then
+        echo -e "${GREEN}OK${NC}"
         return 0
+    else
+        echo -e "${RED}НЕ НАЙДЕН${NC}"
+        echo "      $lib_name не найден. Установите:"
+        case "$lib_name" in
+            GTK4) echo "        sudo apt install libgtk-4-dev" ;;
+            SDL2) echo "        sudo apt install libsdl2-dev" ;;
+            SDL2_mixer) echo "        sudo apt install libsdl2-mixer-dev" ;;
+            mpg123) echo "        sudo apt install libmpg123-dev" ;;
+            *) echo "        Установите $lib_name вручную." ;;
+        esac
+        return 1
     fi
-
-    # Проверяем заголовочный файл
-    if [ -f "$header" ]; then
-        echo "✅ $dep найден (заголовок $header)"
-        return 0
-    fi
-
-    # Проверяем библиотеку
-    if ldconfig -p | grep -q "$libfile" || find /usr -name "lib$libfile.so*" -print -quit 2>/dev/null | grep -q .; then
-        echo "✅ $dep найден (библиотека lib$libfile.so)"
-        return 0
-    fi
-
-    echo "❌ $dep не найден."
-    echo "   Для установки:"
-    case "$dep" in
-        gtk4) echo "     Ubuntu: sudo apt install libgtk-4-dev" ;;
-        sdl2) echo "     Ubuntu: sudo apt install libsdl2-dev" ;;
-        SDL2_mixer) echo "     Ubuntu: sudo apt install libsdl2-mixer-dev" ;;
-        mpg123) echo "     Ubuntu: sudo apt install libmpg123-dev" ;;
-        *) echo "     Установите $dep вручную." ;;
-    esac
-    return 1
 }
 
-check_dep "gtk4" "gtk4" "/usr/include/gtk-4.0/gtk/gtk.h" "gtk-4"
-check_dep "sdl2" "sdl2" "/usr/include/SDL2/SDL.h" "SDL2"
-check_dep "SDL2_mixer" "SDL2_mixer" "/usr/include/SDL2/SDL_mixer.h" "SDL2_mixer"
-check_dep "mpg123" "mpg123" "/usr/include/mpg123.h" "mpg123"
+# Проверяем компилятор и make
+if ! command -v gcc &> /dev/null; then
+    echo -e "${RED}❌ gcc не найден${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✅ gcc найден${NC}"
 
-echo "✅ Все зависимости проверены."
+if ! command -v make &> /dev/null; then
+    echo -e "${RED}❌ make не найден${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✅ make найден${NC}"
+
+if ! command -v pkg-config &> /dev/null; then
+    echo -e "${RED}❌ pkg-config не найден${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✅ pkg-config найден${NC}"
+
+# Проверка GTK4
+echo "Проверка GTK4:"
+check_lib "GTK4" "gtk4" "" "" '#include <gtk/gtk.h>
+int main() { gtk_init(); return 0; }'
+
+# Проверка SDL2
+echo "Проверка SDL2:"
+check_lib "SDL2" "sdl2" "" "" '#include <SDL2/SDL.h>
+int main() { SDL_Init(0); return 0; }'
+
+# Проверка SDL2_mixer
+echo "Проверка SDL2_mixer:"
+check_lib "SDL2_mixer" "SDL2_mixer" "" "" '#include <SDL2/SDL_mixer.h>
+int main() { Mix_Init(0); return 0; }'
+
+
+# Проверка mpg123 (без pkg-config, так как .pc файл часто отсутствует)
+echo "Проверка mpg123:"
+if echo '#include <mpg123.h>
+int main() { mpg123_init(); return 0; }' | gcc -x c - -o /dev/null -lmpg123 2>/dev/null; then
+    echo -e "${GREEN}OK${NC}"
+else
+    echo -e "${RED}НЕ НАЙДЕН${NC}"
+    echo "      mpg123 не найден. Установите:"
+    echo "        sudo apt install libmpg123-dev   # Ubuntu/Debian"
+    echo "        sudo dnf install mpg123-devel    # Fedora"
+    echo "        sudo pacman -S mpg123            # Arch"
+    exit 1
+fi
+
+echo -e "${GREEN}✅ Все зависимости установлены.${NC}"
