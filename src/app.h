@@ -13,6 +13,12 @@ typedef enum{
 }ButtonState;
 
 
+typedef enum{
+    KIRBY,
+    BULBASAUR,
+    MEWTWO,
+    CLOUD
+}GifPersons;
 
 
 typedef struct{
@@ -24,8 +30,16 @@ typedef struct{
     int last_track_index;
 }MusikData;
 
+typedef struct {
+    GdkPixbufAnimation *anim;
+    GdkPixbufAnimationIter *iter;
+    GtkWidget *picture;
+    guint timeout_id;
+    gboolean paused; 
+} GifData;
 
 typedef struct{
+    GifData *gdata;
     GtkWindow *main_window;
     GtkWidget *main_play_button;
     GtkWidget *main_play_button_icon;
@@ -45,10 +59,20 @@ typedef struct{
     ButtonState current_button_mod_state;
     ButtonState current_main_button_one_track_loop;
     ButtonState current_main_button_one_track_state;
+    GifPersons current_update_person_state;
     MusikData *mData;
     gboolean is_seeking;
     guint timeout_id;
     gboolean is_dragging;
+    GtkWidget *change_gif_button;
+    GtkWidget *gif_picture;          // виджет для отображения гифки
+    GifData *gif_data;              // текущие данные гифки
+    int current_gif_index;          // индекс текущей гифки
+    char **gif_paths;               // список путей к гифкам
+    int gif_count;
+
+
+
 }AppData;
 
 

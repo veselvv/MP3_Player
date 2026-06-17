@@ -7,9 +7,118 @@
 #include "dirwork.h"
 #include "music_duration.h"
 #include "app.h"
+#include <gdk-pixbuf/gdk-pixbuf.h>
 
+// ============ РАБОТА С ГИФКАМИ ============
 
+static void cleanup_gif(GtkWidget *picture) {
+    GifData *data = g_object_get_data(G_OBJECT(picture), "gif_data");
+    if (data) {
+        if (data->timeout_id) {
+            g_source_remove(data->timeout_id);
+            data->timeout_id = 0;
+        }
+        if (data->anim) {
+            g_object_unref(data->anim);
+            data->anim = NULL;
+        }
+        data->iter = NULL;
+        data->picture = NULL;
+        gtk_picture_set_paintable(GTK_PICTURE(picture), NULL);
+    }
+}
 
+static gboolean update_gif_frame(gpointer userdata) {
+    GifData *data = (GifData*)userdata;
+    if (!data || !data->anim || !data->iter) {
+        return G_SOURCE_REMOVE; // если данных нет — останавливаем таймер
+    }
+
+    // Если на паузе — просто ждём, не удаляя таймер
+    if (data->paused) {
+        return G_SOURCE_CONTINUE;
+    }
+
+    GdkPixbuf *frame = gdk_pixbuf_animation_iter_get_pixbuf(data->iter);
+    if (frame) {
+        GdkTexture *texture = gdk_texture_new_for_pixbuf(frame);
+        gtk_picture_set_paintable(GTK_PICTURE(data->picture), GDK_PAINTABLE(texture));
+        g_object_unref(texture);
+    }
+
+    int delay = gdk_pixbuf_animation_iter_get_delay_time(data->iter);
+    gdk_pixbuf_animation_iter_advance(data->iter, NULL);
+    if (delay <= 0) delay = 100;
+
+    // Перезапускаем таймер с новым интервалом
+    data->timeout_id = g_timeout_add(delay, update_gif_frame, data);
+
+    return G_SOURCE_REMOVE; // старый таймер завершён
+}
+
+static void load_gif_to_picture(GtkWidget *picture, const char *path, AppData *data, gboolean paused) {
+    // Очищаем старую гифку
+    if (data->gif_data) {
+        cleanup_gif(picture);
+        data->gif_data = NULL;
+        data->gdata = NULL;
+    }
+
+    // Создаём новую структуру
+    GifData *gif_data = g_new0(GifData, 1);
+    gif_data->picture = picture;
+    gif_data->paused = paused;
+    gif_data->timeout_id = 0;
+    
+    // Загружаем анимацию
+    gif_data->anim = gdk_pixbuf_animation_new_from_file(path, NULL);
+    if (!gif_data->anim) {
+        g_printerr("Failed to load GIF: %s\n", path);
+        g_free(gif_data);
+        return;
+    }
+
+    gif_data->iter = gdk_pixbuf_animation_get_iter(gif_data->anim, NULL);
+    if (!gif_data->iter) {
+        g_printerr("Failed to get animation iterator\n");
+        g_object_unref(gif_data->anim);
+        g_free(gif_data);
+        return;
+    }
+
+    // Показываем первый кадр сразу
+    GdkPixbuf *first_frame = gdk_pixbuf_animation_iter_get_pixbuf(gif_data->iter);
+    if (first_frame) {
+        GdkTexture *texture = gdk_texture_new_for_pixbuf(first_frame);
+        gtk_picture_set_paintable(GTK_PICTURE(picture), GDK_PAINTABLE(texture));
+        g_object_unref(texture);
+    }
+
+    // Запускаем таймер (он будет учитывать paused)
+    gif_data->timeout_id = g_timeout_add(100, update_gif_frame, gif_data);
+
+    // Сохраняем в структуру AppData
+    data->gif_data = gif_data;
+    data->gdata = gif_data;
+    g_object_set_data_full(G_OBJECT(picture), "gif_data", gif_data, g_free);
+}
+
+static void switch_gif(GtkWidget *button, gpointer userdata) {
+    AppData *data = (AppData*)userdata;
+    if (!data->gif_paths || data->gif_count == 0) return;
+
+    // Сохраняем текущее состояние паузы
+    gboolean current_paused = data->gdata ? data->gdata->paused : TRUE;
+
+    // Переключаем индекс
+    data->current_gif_index = (data->current_gif_index + 1) % data->gif_count;
+    const char *new_path = data->gif_paths[data->current_gif_index];
+
+    // Загружаем новую гифку с сохранённым состоянием паузы
+    load_gif_to_picture(data->gif_picture, new_path, data, current_paused);
+}
+
+// ============ КОНЕЦ РАБОТЫ С ГИФКАМИ ============
 
 
 static void main_next_button_clicked(GtkButton *btn, gpointer userdata);
@@ -130,6 +239,9 @@ static void main_play_button_clicked(GtkWidget *btn, gpointer appdata){
             
             play_audio(data->mData->music,0);
             data->current_button_play_state = PLAYED;
+            if (data->gdata) {
+                data->gdata->paused = FALSE;
+            }
             if(data->timeout_id==0){
                 data->timeout_id = g_timeout_add(100, update_position_scale, data);
 
@@ -138,11 +250,17 @@ static void main_play_button_clicked(GtkWidget *btn, gpointer appdata){
         case  PAUSED:
             gtk_image_set_from_file(GTK_IMAGE(data->main_play_button_icon), "../ui/pic/pause.png");
             data->current_button_play_state = PLAYED;
+            if (data->gdata) {
+                data->gdata->paused = FALSE;
+            }
             pause_resume_Music();
             break;
         case PLAYED:
             gtk_image_set_from_file(GTK_IMAGE(data->main_play_button_icon), "../ui/pic/play.png");
             data->current_button_play_state = PAUSED;
+            if (data->gdata) {
+                data->gdata->paused = TRUE;
+            }
             pause_resume_Music();
             break;
         default:
@@ -434,10 +552,15 @@ static void on_window_destroy(GtkWindow *win, gpointer userdata) {
         }
         free(data->mData);
     }
+
+    if (data->gif_picture) {
+        cleanup_gif(data->gif_picture);
+    }
     
     // Освобождаем основную структуру
     free(data);
 }
+
 
 
 
@@ -481,8 +604,31 @@ static void app_activate(GtkApplication *app){
     data->main_button_mode = GTK_WIDGET(gtk_builder_get_object(builder, "main_button_mode"));
     data->main_button_one_track = GTK_WIDGET(gtk_builder_get_object(builder, "main_button_one_track"));
     data->main_button_one_track_loop = GTK_WIDGET(gtk_builder_get_object(builder, "main_button_one_track_loop"));
+    data->change_gif_button = GTK_WIDGET(gtk_builder_get_object(builder,"change_gif_button"));
+    
+    data->gif_paths = g_new(char*, 4);
+    data->gif_paths[0] = g_strdup("../ui/gif/kirby-cute.gif");
+    data->gif_paths[1] = g_strdup("../ui/gif/bulbasaur-pokemon.gif");
+    data->gif_paths[2] = g_strdup("../ui/gif/standing-pokemon.gif");
+    data->gif_paths[3] = g_strdup("../ui/gif/clouds-cartoon.gif");
+    data->gif_count = 4;
+    data->current_gif_index = 0;
 
+    // Получаем контейнер из UI
+    GtkWidget *media_container = GTK_WIDGET(gtk_builder_get_object(builder, "media_container"));
 
+    // Создаём виджет для гифки
+    GtkWidget *picture = gtk_picture_new();
+    gtk_widget_set_size_request(picture, 200, 200);
+    data->gif_picture = picture;
+
+    // Загружаем первую гифку
+    load_gif_to_picture(picture, data->gif_paths[0], data, TRUE);
+    gtk_box_append(GTK_BOX(media_container), picture);
+    data->gdata = data->gif_data;
+   
+
+    
     //Удаляем билдер
     g_object_unref(builder);
 
@@ -499,6 +645,7 @@ static void app_activate(GtkApplication *app){
     g_signal_connect(window, "destroy", G_CALLBACK(on_window_destroy), data);
 
 
+    g_signal_connect(data->change_gif_button, "clicked", G_CALLBACK(switch_gif), data);
     g_signal_connect(data->main_button_update, "clicked", G_CALLBACK(main_button_update_clicked), data);
     g_signal_connect(data->main_play_button, "clicked", G_CALLBACK(main_play_button_clicked), data);
     g_signal_connect(data->main_prev_button, "clicked", G_CALLBACK(main_prev_button_clicked), data);
